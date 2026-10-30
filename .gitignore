@@ -1,0 +1,15 @@
+# Cisco Packet Tracer temp and autosave files
+*.pks
+*.bak
+*.tmp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python / virtual environment
+.venv/
+__pycache__/
+*.pyc
+.env
