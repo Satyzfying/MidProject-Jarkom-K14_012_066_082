@@ -21,16 +21,19 @@
 ├── docs/                               <-- Dokumen analisis teknis & panduan
 │   ├── analisis_soal_6_tunnel.md       <-- Analisis GRE Tunnel & IPsec
 │   ├── analisis_soal_7_ospf.md         <-- Analisis OSPF Area 0 & Failover L7
+│   ├── analisis_soal_4_dan_8.md        <-- Analisis DHCP Services & Layanan Aplikasi
 │   └── cheat_sheet_uji2_orang2.md      <-- Panduan Uji 2 Individu (10 Menit)
 ├── images/                             <-- Bukti screenshot pengujian mandiri
 │   ├── soal-6/                         <-- Screenshot pengujian GRE & IPsec
-│   └── soal-7/                         <-- Screenshot pengujian OSPF & Failover
+│   ├── soal-7/                         <-- Screenshot pengujian OSPF & Failover
+│   └── soal-8/                         <-- Screenshot DHCP & layanan aplikasi
 ├── nodes/                              <-- Konfigurasi Cisco IOS per perangkat (.cfg)
 │   ├── R-PUSAT/
 │   │   └── gre_tunnel.cfg
 │   ├── R-PELABUHAN/
 │   │   └── gre_tunnel.cfg
-│   └── ospf_all_routers.cfg            <-- Script OSPF lengkap 7 router
+│   ├── ospf_all_routers.cfg            <-- Script OSPF lengkap 7 router
+│   └── dhcp_all_routers.cfg            <-- Script DHCP 7 router + relay CCTV
 ├── result/                             <-- Berkas output utama yang dinilai
 │   ├── K14_VLSM.pkt                    <-- File 1: Topologi Utama (Static + GRE + Apps)
 │   ├── K14_VLSM_OSPF.pkt               <-- File 2: Varian Dynamic Routing OSPF + Link L7
@@ -121,7 +124,44 @@ Topologi mengadopsi arsitektur *Hub-and-Spoke* dengan **`R-PUSAT`** (Balai Kota)
 
 ---
 
-## 4. Berkas Pengujian & Panduan
+## 4. DHCP Services & Layanan Aplikasi Smart City (Soal 4 & 8)
+
+Implementasi bagian **Orang 3 (NRP 082)**. Detail teknis lengkap: [`docs/analisis_soal_4_dan_8.md`](docs/analisis_soal_4_dan_8.md).
+
+### 4.1 DHCP Services (Soal 4)
+- **36 PC pengguna** di 12 LAN kini memakai **DHCP**, menerima IP + gateway + DNS `192.112.239.2` secara otomatis.
+- Router menjalankan pool DHCP per LAN (`.1-.20` di-*exclude* agar tidak bentrok dengan gateway/perangkat statis).
+- **CCTV Kota dilayani DHCP server** di LAN Server & Storage DC (`192.112.239.2`), bukan oleh router:
+  R-DC hanya menjadi relay (`ip helper-address`). Pool `CCTV-KOTA` = `192.112.96.100 - .119.211`.
+- Router dan seluruh server tetap **IP statis**.
+- Script: [`nodes/dhcp_all_routers.cfg`](nodes/dhcp_all_routers.cfg)
+
+### 4.2 Layanan Aplikasi (Soal 8)
+Domain internal: **`14.smartcity.lab`** (alias `surabaya.go.id`).
+
+| Layanan | Server | Alamat |
+|:---|:---|:---|
+| DNS + DHCP | `Server dan Storage DC 1` | `192.112.239.2` |
+| FTP | `Server dan Storage DC 2` | `192.112.239.3` |
+| Mail (SMTP/POP3) | `Server dan Storage DC 3` | `192.112.239.4` |
+| Web Portal Smart City | `Server Balai Kota 1` | `192.112.241.2` |
+
+- **DNS**: `www` / `ftp` / `mail` → server di atas, dapat diakses dari seluruh wilayah.
+- **Web**: halaman "Portal Smart City Surabaya" berisi **Kelompok 14** (`www.14.smartcity.lab`).
+- **FTP**: akun `cctv` / `K14cctv` (RWDNL) agar LAN CCTV dapat mengunggah rekaman.
+- **Mail**: domain `14.smartcity.lab`; akun `balai1`, `balai2`, `balai3`, `pelabuhan1`,
+  `pelabuhan2`, `pelabuhan3` — teruji kirim/terima dua arah Balai Kota ↔ Pelabuhan
+  (klien dikonfigurasi di seluruh PC kedua wilayah).
+
+> ✅ **Catatan:** link **L4 (`R-PUSAT` ↔ `R-TIMUR`)** yang sebelumnya belum terpasang sudah
+> diperbaiki lewat **VLAN 40 + trunk `SW-Pegawai`** (`Vlan40 192.112.241.45/30` ↔
+> `R-TIMUR Gi0/0 192.112.241.46/30`). OSPF kini adjacency `FULL` dan seluruh wilayah,
+> termasuk Timur, dapat mengakses internet serta layanan aplikasi. Rincian ada di
+> [`docs/analisis_soal_4_dan_8.md`](docs/analisis_soal_4_dan_8.md) bagian 4.
+
+---
+
+## 5. Berkas Pengujian & Panduan
 - **Spreadsheet Excel Resmi**: [`result/UTS-KOMDAT-JARKOM-K14.xlsx`](result/UTS-KOMDAT-JARKOM-K14.xlsx)
 - **Script Konfigurasi Lengkap**: Tersedia di folder [`nodes/`](nodes/)
 - **Cheat Sheet Uji 2 Individu (10 Menit)**: [`docs/cheat_sheet_uji2_orang2.md`](docs/cheat_sheet_uji2_orang2.md)
