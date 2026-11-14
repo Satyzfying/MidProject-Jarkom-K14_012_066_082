@@ -47,8 +47,9 @@ Jika paket data melintasi router perantara (`R-UTARA`), administrator atau penyu
 ### C. Solusi: Enkripsi IPsec over GRE (Bonus +5 Poin)
 Untuk mengatasi kelemahan mendasar GRE tersebut, kami menerapkan arsitektur **IPsec over GRE**:
 1. **IKE Phase 1 (ISAKMP Policy)**: Membentuk saluran negosiasi aman menggunakan algoritma simetris `AES`, fungsi hash `SHA`, dan pertukaran kunci `Diffie-Hellman Group 2` dengan pre-shared key `K14SECURE`.
-2. **IKE Phase 2 (Transform-Set)**: Menerapkan protokol **ESP** (*Encapsulating Security Payload*) dengan enkripsi `esp-aes` dan integritas `esp-sha-hmac` dalam mode **transport**.
+2. **IKE Phase 2 (Transform-Set)**: Menerapkan protokol **ESP** (*Encapsulating Security Payload*) dengan enkripsi `esp-aes` dan integritas `esp-sha-hmac`. Packet Tracer 9 tidak mendukung perintah `mode transport`, sehingga SA berjalan pada **tunnel mode** (default).
 3. **Crypto Map**: Seluruh paket berprotokol GRE (IP proto 47) antara IP fisik `192.112.241.37` dan `192.112.241.54` otomatis dienkripsi sebelum meninggalkan kartu antarmuka fisik, sehingga data dijamin 100% rahasia saat melewati `R-UTARA`.
+4. **Verifikasi**: `show crypto isakmp sa` menampilkan `QM_IDLE ACTIVE`, `show crypto ipsec sa` menampilkan SA ESP AES/SHA `ACTIVE` dengan counter encaps/decaps yang bertambah, dan ping melalui tunnel tetap berhasil. `R-PELABUHAN` memakai ISR4331 karena model 2911 tidak mendukung perintah crypto di Packet Tracer.
 
 ---
 

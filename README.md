@@ -118,10 +118,16 @@ diberi variasi kecil agar tata letak terlihat lebih natural.
 
 - `Tunnel0`: `192.168.14.1` (R-PUSAT) dan `192.168.14.2` (R-PELABUHAN), `mtu 1476`.
 - Lalu lintas Balai Kota ke Pelabuhan diarahkan lewat tunnel dengan static route.
-- IPsec over GRE: konfigurasi dasar tersedia di `R-PUSAT` (ISAKMP policy 10 AES/SHA/DH2,
-  PSK `K14SECURE`, transform-set `esp-aes esp-sha-hmac`), tetapi **crypto map belum terpasang**
-  dan `R-PELABUHAN` (2911) tidak mendukung perintah crypto pada Packet Tracer. Bonus IPsec
-  belum aktif; terowongan GRE tetap berjalan tanpa enkripsi.
+- IPsec over GRE aktif: ISAKMP policy 10 (AES/SHA/DH2, PSK `K14SECURE`), transform-set
+  `esp-aes esp-sha-hmac`, ACL 100 (GRE `192.112.241.37` - `192.112.241.54`), dan crypto map
+  `CMAP` pada `R-PUSAT Gi0/0/1` serta `R-PELABUHAN Gi0/0/0`.
+- `R-PELABUHAN` diganti ke ISR4331 karena model 2911 tidak mendukung perintah crypto pada
+  Packet Tracer.
+- Terverifikasi: ISAKMP SA `ACTIVE`, IPsec SA ESP AES/SHA `ACTIVE`, counter encaps/decaps
+  bertambah, dan ping melalui tunnel tetap berhasil. PT tidak mendukung `mode transport`,
+  sehingga SA memakai tunnel mode.
+- Bonus IPsec diterapkan pada file utama `K14_VLSM.pkt`; varian `K14_VLSM_OSPF.pkt` berfokus
+  pada routing dinamis.
 - Detail: [`docs/analisis_soal_6_tunnel.md`](docs/analisis_soal_6_tunnel.md).
 
 ### 3.3 Dynamic Routing OSPF (Soal 7)
