@@ -271,7 +271,7 @@ Setelah kabel terpasang, adjacency OSPF langsung terbentuk (tanpa perubahan DHCP
 ```text
 R-TIMUR# show ip ospf neighbor
 Neighbor ID     Pri   State      Dead Time   Address         Interface
-203.0.113.57      1   FULL/DR    00:00:32    192.112.241.45  GigabitEthernet0/0
+1.1.1.1           1   FULL/DR    00:00:32    192.112.241.45  GigabitEthernet0/0
 
 R-TIMUR# show ip route
 O*E2 0.0.0.0/0 [110/1] via 192.112.241.45, ... GigabitEthernet0/0

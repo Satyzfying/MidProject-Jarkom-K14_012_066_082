@@ -96,6 +96,9 @@ Balai Kota dengan Pelabuhan. Pada varian OSPF ditambahkan link cadangan L7 antar
 
 ![Topologi Smart City Kelompok 14](images/soal-8/topologi-k14-vlsm.png)
 
+Label setiap LAN memuat nama subnet, Network ID/prefix, dan jumlah host. Posisi perangkat
+diberi variasi kecil agar tata letak terlihat lebih natural.
+
 ---
 
 ## 3. Implementasi
@@ -115,17 +118,26 @@ Balai Kota dengan Pelabuhan. Pada varian OSPF ditambahkan link cadangan L7 antar
 
 - `Tunnel0`: `192.168.14.1` (R-PUSAT) dan `192.168.14.2` (R-PELABUHAN), `mtu 1476`.
 - Lalu lintas Balai Kota ke Pelabuhan diarahkan lewat tunnel dengan static route.
-- IPsec over GRE: ISAKMP policy 10 (AES, SHA, DH group 2, PSK `K14SECURE`), transform-set
-  `esp-aes esp-sha-hmac` mode transport, crypto map pada interface WAN.
+- IPsec over GRE: konfigurasi dasar tersedia di `R-PUSAT` (ISAKMP policy 10 AES/SHA/DH2,
+  PSK `K14SECURE`, transform-set `esp-aes esp-sha-hmac`), tetapi **crypto map belum terpasang**
+  dan `R-PELABUHAN` (2911) tidak mendukung perintah crypto pada Packet Tracer. Bonus IPsec
+  belum aktif; terowongan GRE tetap berjalan tanpa enkripsi.
 - Detail: [`docs/analisis_soal_6_tunnel.md`](docs/analisis_soal_6_tunnel.md).
 
 ### 3.3 Dynamic Routing OSPF (Soal 7)
 
 - Single area 0, `network 192.112.0.0 0.0.255.255 area 0` pada tujuh router.
+- Router-ID `1.1.1.1` (`R-PUSAT`) sampai `7.7.7.7` (`R-PELABUHAN`).
 - `default-information originate` hanya di `R-PUSAT`; router lain menerima default `O*E2`.
-- Seluruh adjacency yang terpasang berstatus `FULL`.
-- Link cadangan L7 dan detail failover dibahas di
-  [`docs/analisis_soal_7_ospf.md`](docs/analisis_soal_7_ospf.md) serta
+- Seluruh rute statis antar-router dihapus; rute statis yang tersisa hanya default ISP dan
+  jalur GRE Tunnel.
+- `passive-interface` dipasang pada seluruh interface LAN sehingga tidak ada hello OSPF ke
+  segmen pengguna. Terverifikasi lewat `show ip ospf interface` ("No Hellos").
+- Link cadangan L7 `192.112.241.60/30` antara `R-DC` dan `R-UTARA` sudah dibuat
+  (`R-DC` memakai modul HWIC-4ESW, `R-UTARA` port `Gi0/1/1`).
+- Uji failover: `R-DC Gi0/0` (L1) di-shutdown, rute ke LAN Data Center otomatis beralih
+  lewat `R-UTARA` dan L7, ping ke server DC tetap berhasil; link lalu diaktifkan kembali.
+- Detail: [`docs/analisis_soal_7_ospf.md`](docs/analisis_soal_7_ospf.md) serta
   [`nodes/ospf_all_routers.cfg`](nodes/ospf_all_routers.cfg).
 
 ### 3.4 DHCP Services (Soal 4)
@@ -241,7 +253,7 @@ Listing /ftp directory from ftp.14.smartcity.lab
 
 ```text
 R-TIMUR# show ip ospf neighbor
-203.0.113.57   1   FULL/DR   00:00:32   192.112.241.45   GigabitEthernet0/0
+1.1.1.1        1   FULL/DR   00:00:32   192.112.241.45   GigabitEthernet0/0
 
 C:\> ping 8.8.8.8
 Reply from 8.8.8.8: bytes=32 time<1ms TTL=125
@@ -258,10 +270,13 @@ Reply from 8.8.8.8: bytes=32 time<1ms TTL=125
 - **Spreadsheet Subnetting**: [`UTS-KOMDAT-JARKOM-K14.xlsx`](UTS-KOMDAT-JARKOM-K14.xlsx) (dan di [`result/UTS-KOMDAT-JARKOM-K14.xlsx`](result/UTS-KOMDAT-JARKOM-K14.xlsx))
 - **Script Konfigurasi**: folder [`nodes/`](nodes/)
 - **Panduan Uji Individu**: [`docs/cheat_sheet_uji2_orang2.md`](docs/cheat_sheet_uji2_orang2.md)
-- **Arsip Final Penyerahan**: `ProjectJarkom_K14_012_066_082.ZIP`
+- **Arsip Final Penyerahan**: `MidProject Jarkom_K14_082_012_066.ZIP`
 
 Catatan teknis:
 
+- Packet Tracer tidak selalu menyimpan lease DHCP saat file dibuka ulang. Jika ada PC yang
+  masih menampilkan `0.0.0.0`, jalankan `ipconfig /renew` pada PC tersebut; seluruh pool dan
+  relay sudah dikonfigurasi dan terbukti bekerja.
 - Simulator Packet Tracer tidak menyediakan berkas lokal pada PC-PT, sehingga perintah
   `put` FTP tidak dapat dijalankan dari PC. Autentikasi, hak tulis, dan direktori server
   sudah terbukti; untuk demo unggah, berkas dibuat lebih dulu lewat aplikasi Text Editor
