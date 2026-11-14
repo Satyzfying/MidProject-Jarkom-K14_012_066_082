@@ -249,13 +249,16 @@ Reply from 8.8.8.8: bytes=32 time<1ms TTL=125
 
 ---
 
-## 6. Berkas dan Catatan
+## 6. Berkas Pengumpulan & Video Demo
 
-- Spreadsheet resmi: [`result/UTS-KOMDAT-JARKOM-K14.xlsx`](result/UTS-KOMDAT-JARKOM-K14.xlsx)
-- File Packet Tracer: [`result/K14_VLSM.pkt`](result/K14_VLSM.pkt) dan
-  [`result/K14_VLSM_OSPF.pkt`](result/K14_VLSM_OSPF.pkt)
-- Script konfigurasi: folder [`nodes/`](nodes/)
-- Panduan uji individu: [`docs/cheat_sheet_uji2_orang2.md`](docs/cheat_sheet_uji2_orang2.md)
+- **Video Demo (YouTube Unlisted)**: [Tautan Video Demo Pengujian Soal 1-8](https://youtu.be/PENDING_LINK) *(Segera cantumkan tautan setelah diunggah)*
+- **File Packet Tracer**:
+  - Topologi Utama Static (Soal 1-6 & 8): [`K14_VLSM.pkt`](K14_VLSM.pkt) (dan di [`result/K14_VLSM.pkt`](result/K14_VLSM.pkt))
+  - Topologi Dynamic OSPF (Soal 7): [`K14_VLSM_OSPF.pkt`](K14_VLSM_OSPF.pkt) (dan di [`result/K14_VLSM_OSPF.pkt`](result/K14_VLSM_OSPF.pkt))
+- **Spreadsheet Subnetting**: [`UTS-KOMDAT-JARKOM-K14.xlsx`](UTS-KOMDAT-JARKOM-K14.xlsx) (dan di [`result/UTS-KOMDAT-JARKOM-K14.xlsx`](result/UTS-KOMDAT-JARKOM-K14.xlsx))
+- **Script Konfigurasi**: folder [`nodes/`](nodes/)
+- **Panduan Uji Individu**: [`docs/cheat_sheet_uji2_orang2.md`](docs/cheat_sheet_uji2_orang2.md)
+- **Arsip Final Penyerahan**: `ProjectJarkom_K14_012_066_082.ZIP`
 
 Catatan teknis:
 
