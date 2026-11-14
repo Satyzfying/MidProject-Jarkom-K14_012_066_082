@@ -276,7 +276,7 @@ Reply from 8.8.8.8: bytes=32 time<1ms TTL=125
 - **Spreadsheet Subnetting**: [`UTS-KOMDAT-JARKOM-K14.xlsx`](UTS-KOMDAT-JARKOM-K14.xlsx) (dan di [`result/UTS-KOMDAT-JARKOM-K14.xlsx`](result/UTS-KOMDAT-JARKOM-K14.xlsx))
 - **Script Konfigurasi**: folder [`nodes/`](nodes/)
 - **Panduan Uji Individu**: [`docs/cheat_sheet_uji2_orang2.md`](docs/cheat_sheet_uji2_orang2.md)
-- **Arsip Final Penyerahan**: `MidProject Jarkom_K14_082_012_066.ZIP`
+- **Arsip Final Penyerahan**: `ProjectJarkom_K14_012_066_082.ZIP`
 
 Catatan teknis:
 
