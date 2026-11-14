@@ -8,9 +8,9 @@ Semester Gasal 2026/2027
 
 | No | Nama | NRP | Peran / Fokus Pengerjaan |
 |:--:|:---|:---:|:---|
-| 1 | Gede Satya Putra Aryanta | 5027251012 | Infrastructure, Topologi WAN, Static Routing & NAT |
-| 2 | Catur Setyo Ragil | 5027251066 | Subnetting Spreadsheet, GRE Tunnel, IPsec, & Dynamic OSPF |
-| 3 | Fiorellin Ilona | 5027251082 | DHCP Services, Smart City Applications (DNS, Web, FTP, Mail) & Documentation |
+| 1 | Fiorellin Ilona | 5027251082 | Infrastructure, Topologi WAN, Static Routing & NAT (Orang 1) |
+| 2 | Gede Satya Putra Aryanta | 5027251012 | Subnetting Spreadsheet, GRE Tunnel, IPsec, & Dynamic OSPF (Orang 2) |
+| 3 | Catur Setyo Ragil | 5027251066 | DHCP Services, Smart City Applications (DNS, Web, FTP, Mail) & Documentation (Orang 3) |
 
 ---
 

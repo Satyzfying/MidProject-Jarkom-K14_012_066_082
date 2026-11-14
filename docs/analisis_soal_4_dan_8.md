@@ -1,6 +1,6 @@
 # 📡 Analisis Teknis Soal 4 & 8: DHCP Services dan Layanan Aplikasi Smart City (Kelompok 14)
 
-Dokumen ini mencatat implementasi bagian **Orang 3 (NRP 082)**: DHCP Services (Soal 4) dan
+Dokumen ini mencatat implementasi bagian **Orang 3 (Catur - NRP 066)**: DHCP Services (Soal 4) dan
 Layanan Aplikasi Smart City (Soal 8). Seluruh konfigurasi diuji langsung pada topologi live
 `K14_VLSM.pkt` di Cisco Packet Tracer 9.0.1.
 
