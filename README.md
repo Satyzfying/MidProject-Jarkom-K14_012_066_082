@@ -2,6 +2,8 @@
 ### Implementasi Jaringan Smart City Pemerintah Kota Surabaya
 Semester Gasal 2026/2027
 
+Demo video: https://youtu.be/bFem1dNLWEs
+
 ---
 
 ## Anggota Kelompok 14
