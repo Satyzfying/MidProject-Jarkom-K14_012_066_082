@@ -113,6 +113,20 @@ Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir
   - **CIDR** membutuhkan blok induk `/15` (131.072 alamat) dan mengalokasikan **118.784 alamat**, padahal kebutuhan riil hanya 42.080 host (utilisasi riil hanya 32,10%). CIDR memboroskan sekitar 1,92x alamat dibanding VLSM.
 - **Artefak**: Spreadsheet resmi [`UTS-KOMDAT-JARKOM-K14.xlsx`](UTS-KOMDAT-JARKOM-K14.xlsx).
 
+#### Bukti Dokumentasi Spreadsheet Subnetting (Soal 1):
+
+**1. Lembar Kerja Perhitungan VLSM (`Sheet VLSM`):**  
+![Tabel VLSM](images/soal-2/excel-vlsm.png)
+
+**2. Lembar Kerja Perhitungan CIDR Wilayah (`Sheet CIDR`):**  
+![Tabel CIDR](images/soal-2/excel-cidr.png)
+
+**3. Lembar Kerja Agregasi Rute Supernetting (`Sheet Supernetting`):**  
+![Tabel Supernetting](images/soal-2/excel-supernetting.png)
+
+**4. Lembar Kerja Dokumentasi Revisi ETS (`Sheet Tabel Revisi UTS`):**  
+![Tabel Revisi ETS](images/soal-2/excel-revisi-uts.png)
+
 ### 3.2 Soal 2 — Desain Topologi & Penataan Perangkat Jaringan (CPT)
 - **Ketentuan**: Membangun topologi modular skala kota di Cisco Packet Tracer dengan 8 Router, 14 Switch 2960, 36 PC host, 7 Server, dan 1 Network Controller.
 - **Implementasi**: Penataan canvas dirancang simetris dan terstruktur sesuai Gambar 1 Soal:
@@ -166,6 +180,16 @@ Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir
   - **IPsec over GRE**: Diterapkan ISAKMP Policy 10 (AES-128, SHA-1, DH Group 2, PSK `K14SECURE`) dan Transform-set ESP-AES ESP-SHA. Crypto Map `CMAP` dipasang pada port fisik WAN `R-PUSAT` (`Gi0/0/1`) dan `R-PELABUHAN` (`Gi0/0/0`). Status SA terverifikasi `ACTIVE` dengan pertambahan counter enkapsulasi/dekapsulasi.
 - **Artefak**: [`nodes/R-PUSAT/gre_tunnel.cfg`](nodes/R-PUSAT/gre_tunnel.cfg) dan [`nodes/R-PELABUHAN/gre_tunnel.cfg`](nodes/R-PELABUHAN/gre_tunnel.cfg).
 
+#### Bukti Pengujian Soal 6:
+
+**1. Status Asosiasi Keamanan IPsec (ISAKMP SA & IPsec SA):**  
+Verifikasi menunjukkan status SA `ACTIVE`, `QM_IDLE`, serta penambahan dinamis pada *counter* enkripsi (`#pkts encaps: 277`, `#pkts decaps: 124`):
+![Status IPsec SA](images/soal-6/gre-ipsec-sa.png)
+
+**2. Pengujian Jalur Privat Melalui GRE Tunnel (Traceroute & Ping):**  
+Hasil `tracert 192.112.160.2` membuktikan bahwa hop kedua langsung melintasi IP Tunnel `192.168.14.2` tanpa terlihat transit melalui router fisik perantara di Layer 3:
+![Traceroute via GRE Tunnel](images/soal-6/gre-traceroute-tunnel.png)
+
 ### 3.7 Soal 7 — Dynamic Routing OSPF Area 0 & Redundansi Link L7 (Failover)
 - **Ketentuan**: Pada file varian `K14_VLSM_OSPF.pkt`, mengganti seluruh static routing antar-router dengan OSPFv2 Single Area 0, Router-ID terstruktur, tanpa pesan OSPF ke arah LAN pengguna, serta uji ketahanan link cadangan L7 (`R-DC` <--> `R-UTARA`).
 - **Implementasi**:
@@ -175,6 +199,16 @@ Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir
   - **Keamanan LAN**: `passive-interface` dipasang di seluruh antarmuka LAN pengguna (`Vlan21`/`Vlan27` di R-PUSAT, `Vlan23`/`Gi0/0/2` di R-UTARA, `Gi0/1`/`Gi0/2` di cabang lain) untuk mencegah *rogue neighbor* dan menghemat CPU/bandwidth.
   - **Link Cadangan L7 & Uji Failover**: Subnet WAN `/30` dialokasikan pada `192.112.241.60/30` di atas SVI Vlan1 HWIC-4ESW. Saat link utama `L1` diputus (*shutdown*), OSPF langsung mengalihkan rute Data Center melalui `R-UTARA` dan `L7` dalam hitungan detik (*zero packet loss* setelah konvergensi).
 - **Artefak**: [`nodes/ospf_all_routers.cfg`](nodes/ospf_all_routers.cfg) dan [`K14_VLSM_OSPF.pkt`](K14_VLSM_OSPF.pkt).
+
+#### Bukti Pengujian Soal 7:
+
+**1. Verifikasi Adjacency OSPF Neighbor (Status FULL):**  
+Pengecekan `show ip ospf neighbor` membuktikan seluruh router tetangga membentuk relasi adjacency penuh (`FULL/DR` dan `FULL/BDR`):
+![OSPF Neighbor Adjacency](images/soal-7/ospf-neighbor-full.png)
+
+**2. Pengujian Live Failover Link Cadangan L7:**  
+Saat Link Utama L1 (`R-PUSAT` - `R-DC`) terputus, OSPF secara otomatis melakukan konvergensi ulang memindahkan lalu lintas data ke Link Cadangan L7 (`R-UTARA` $\leftrightarrow$ `R-DC`), sehingga komunikasi ping ke Server DC tetap berlangsung sukses 100%:
+![OSPF Live Failover Test](images/soal-7/ospf-failover-test.png)
 
 ### 3.8 Soal 8 — Layanan Aplikasi Smart City Terpusat
 - **Ketentuan**: Mengimplementasikan 4 layanan aplikasi inti (DNS, Web, FTP, Mail) pada domain internal `14.smartcity.lab` dan alias `surabaya.go.id`.
