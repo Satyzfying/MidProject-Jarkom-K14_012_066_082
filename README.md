@@ -18,24 +18,21 @@ Semester Gasal 2026/2027
 
 ```text
 .
-├── docs/
-│   ├── analisis_soal_4_dan_8.md        Analisis DHCP & layanan aplikasi
-│   ├── analisis_soal_6_tunnel.md       Analisis GRE Tunnel & IPsec
-│   ├── analisis_soal_7_ospf.md         Analisis OSPF & link cadangan L7
-│   ├── cheat_sheet_uji2_orang1.md      Panduan uji 2 - static routing & NAT
-│   ├── cheat_sheet_uji2_orang2.md      Panduan uji 2 - tunnel & OSPF
-│   └── cheat_sheet_uji2_orang3.md      Panduan uji 2 - DHCP & aplikasi
 ├── images/
 │   └── soal-8/                         Screenshot topologi & detail
 ├── nodes/
-│   ├── R-ISP/setup_isp.cfg
-│   ├── R-PUSAT/                        gre_tunnel.cfg, static_nat.cfg
-│   ├── R-PELABUHAN/gre_tunnel.cfg
+│   ├── R-ISP/
+│   │   └── setup_isp.cfg               Konfigurasi R-ISP & Server 8.8.8.8
+│   ├── R-PELABUHAN/
+│   │   └── gre_tunnel.cfg              Konfigurasi GRE Tunnel & IPsec R-PELABUHAN
+│   ├── R-PUSAT/
+│   │   ├── gre_tunnel.cfg              Konfigurasi GRE Tunnel & IPsec R-PUSAT
+│   │   └── static_nat.cfg              Konfigurasi Static Routing & NAT Overload
 │   ├── dhcp_all_routers.cfg            Script DHCP 7 router + relay CCTV
-│   ├── ospf_all_routers.cfg            Script OSPF 7 router
+│   ├── ospf_all_routers.cfg            Script OSPF 7 router + link L7
 │   └── router_cabang_static.cfg        Script static route router cabang
-├── K14_VLSM.pkt                        Topologi utama (static + GRE + aplikasi)
-├── K14_VLSM_OSPF.pkt                   Varian OSPF + link cadangan L7
+├── K14_VLSM.pkt                        Topologi utama (static + GRE + NAT + aplikasi)
+├── K14_VLSM_OSPF.pkt                   Varian dinamis (OSPF Area 0 + link cadangan L7)
 ├── UTS-KOMDAT-JARKOM-K14.xlsx          Spreadsheet subnetting resmi
 ├── .gitignore
 └── README.md
@@ -137,7 +134,7 @@ Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir
   - Dibuat pool DHCP di 7 router cabang/pusat dengan exclusion address `.1 - .20` guna memproteksi IP gateway dan perangkat infrastruktur statis.
   - Setiap pool otomatis menyertakan `dns-server 192.112.239.2` (Server DNS Data Center).
   - **DHCP Relay CCTV**: Pada antarmuka `GigabitEthernet0/1` `R-DC`, diaktifkan `ip helper-address 192.112.239.2`. Broadcast DHCP Discover dari PC CCTV diubah menjadi unicast menuju `Server dan Storage DC 1` (pool `CCTV-KOTA` rentang `192.112.96.100` - `.119.211`). `R-DC` sama sekali tidak memiliki pool lokal untuk CCTV.
-- **Artefak**: [`nodes/dhcp_all_routers.cfg`](nodes/dhcp_all_routers.cfg) dan [`docs/analisis_soal_4_dan_8.md`](docs/analisis_soal_4_dan_8.md).
+- **Artefak**: [`nodes/dhcp_all_routers.cfg`](nodes/dhcp_all_routers.cfg) dan topologi live [`K14_VLSM.pkt`](K14_VLSM.pkt).
 
 ### 3.5 Soal 5 — Akses Internet & NAT Overload / PAT
 - **Ketentuan**: Memungkinkan seluruh perangkat LAN privat mengakses server internet publik `8.8.8.8` tanpa membocorkan alamat privat ke ISP.
@@ -146,7 +143,7 @@ Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir
   - Seluruh interface LAN internal dan subinterface/SVI ditandai sebagai `ip nat inside`.
   - Digunakan `access-list 1 permit 192.112.0.0 0.0.255.255` dan `permit 192.168.14.0 0.0.0.3` yang diikat dengan perintah `ip nat inside source list 1 interface GigabitEthernet0/0/2 overload`.
   - Trafik ribuan host internal ditranslasikan menjadi IP publik tunggal `203.0.113.57` dengan port multiplexing.
-- **Artefak**: [`nodes/R-PUSAT/static_nat.cfg`](nodes/R-PUSAT/static_nat.cfg) dan [`docs/cheat_sheet_uji2_orang1.md`](docs/cheat_sheet_uji2_orang1.md).
+- **Artefak**: [`nodes/R-PUSAT/static_nat.cfg`](nodes/R-PUSAT/static_nat.cfg).
 
 ### 3.6 Soal 6 — Jalur Privat Virtual Terenkripsi (GRE Tunnel & Keamanan IPsec)
 - **Ketentuan**: Membangun tunnel privat Balai Kota - Pelabuhan menembus `R-UTARA`, menganalisis alasan router memilih tunnel, menganalisis kelemahan GRE, dan menerapkan proteksi enkripsi IPsec.
@@ -155,7 +152,7 @@ Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir
   - **Pemilihan Jalur**: Router memilih tunnel karena rute ke LAN Pelabuhan memiliki *Longest Prefix Match* (`/19` dan `/25`) yang lebih spesifik dibanding default route (`/0`), serta memiliki *Administrative Distance* statis (AD 1) yang mengungguli rute OSPF (AD 110).
   - **Kelemahan GRE**: GRE hanya protokol enkapsulasi (IP proto 47) tanpa enkripsi, sehingga payload teks mentah rentan disadap di router transit `R-UTARA`.
   - **IPsec over GRE**: Diterapkan ISAKMP Policy 10 (AES-128, SHA-1, DH Group 2, PSK `K14SECURE`) dan Transform-set ESP-AES ESP-SHA. Crypto Map `CMAP` dipasang pada port fisik WAN `R-PUSAT` (`Gi0/0/1`) dan `R-PELABUHAN` (`Gi0/0/0`). Status SA terverifikasi `ACTIVE` dengan pertambahan counter enkapsulasi/dekapsulasi.
-- **Artefak**: [`docs/analisis_soal_6_tunnel.md`](docs/analisis_soal_6_tunnel.md), [`nodes/R-PUSAT/gre_tunnel.cfg`](nodes/R-PUSAT/gre_tunnel.cfg), dan [`nodes/R-PELABUHAN/gre_tunnel.cfg`](nodes/R-PELABUHAN/gre_tunnel.cfg).
+- **Artefak**: [`nodes/R-PUSAT/gre_tunnel.cfg`](nodes/R-PUSAT/gre_tunnel.cfg) dan [`nodes/R-PELABUHAN/gre_tunnel.cfg`](nodes/R-PELABUHAN/gre_tunnel.cfg).
 
 ### 3.7 Soal 7 — Dynamic Routing OSPF Area 0 & Redundansi Link L7 (Failover)
 - **Ketentuan**: Pada file varian `K14_VLSM_OSPF.pkt`, mengganti seluruh static routing antar-router dengan OSPFv2 Single Area 0, Router-ID terstruktur, tanpa pesan OSPF ke arah LAN pengguna, serta uji ketahanan link cadangan L7 (`R-DC` <--> `R-UTARA`).
@@ -165,7 +162,7 @@ Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir
   - **Default Route Injection**: Perintah `default-information originate` dipasang di `R-PUSAT`, menyebarkan rute default `O*E2` secara otomatis ke seluruh cabang.
   - **Keamanan LAN**: `passive-interface` dipasang di seluruh antarmuka LAN pengguna (`Vlan21`/`Vlan27` di R-PUSAT, `Vlan23`/`Gi0/0/2` di R-UTARA, `Gi0/1`/`Gi0/2` di cabang lain) untuk mencegah *rogue neighbor* dan menghemat CPU/bandwidth.
   - **Link Cadangan L7 & Uji Failover**: Subnet WAN `/30` dialokasikan pada `192.112.241.60/30` di atas SVI Vlan1 HWIC-4ESW. Saat link utama `L1` diputus (*shutdown*), OSPF langsung mengalihkan rute Data Center melalui `R-UTARA` dan `L7` dalam hitungan detik (*zero packet loss* setelah konvergensi).
-- **Artefak**: [`docs/analisis_soal_7_ospf.md`](docs/analisis_soal_7_ospf.md) dan [`nodes/ospf_all_routers.cfg`](nodes/ospf_all_routers.cfg).
+- **Artefak**: [`nodes/ospf_all_routers.cfg`](nodes/ospf_all_routers.cfg) dan [`K14_VLSM_OSPF.pkt`](K14_VLSM_OSPF.pkt).
 
 ### 3.8 Soal 8 — Layanan Aplikasi Smart City Terpusat
 - **Ketentuan**: Mengimplementasikan 4 layanan aplikasi inti (DNS, Web, FTP, Mail) pada domain internal `14.smartcity.lab` dan alias `surabaya.go.id`.
@@ -174,7 +171,7 @@ Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir
   2. **Web Server** (`Server Balai Kota 1` - `192.112.241.2`): Menampilkan portal resmi "Portal Smart City Surabaya" lengkap dengan identitas kelompok 14.
   3. **FTP Server** (`Server dan Storage DC 2` - `192.112.239.3`): Menampung backup CCTV (`user: cctv / pass: K14cctv`) dan berkas staf (`user: pegawai / pass: K14pegawai`) dengan hak akses penuh RWDNL.
   4. **Mail Server** (`Server dan Storage DC 3` - `192.112.239.4`): Melayani SMTP dan POP3 domain `14.smartcity.lab` untuk akun staf Balai Kota (`balai1` - `balai3`) dan Pelabuhan (`pelabuhan1` - `pelabuhan3`), teruji berkirim email dua arah.
-- **Artefak**: [`docs/analisis_soal_4_dan_8.md`](docs/analisis_soal_4_dan_8.md) dan [`docs/cheat_sheet_uji2_orang3.md`](docs/cheat_sheet_uji2_orang3.md).
+- **Artefak**: Layanan server terkonfigurasi aktif di [`K14_VLSM.pkt`](K14_VLSM.pkt) (`Server Balai Kota 1` dan `Server dan Storage DC 1-3`).
 
 ---
 
