@@ -6,7 +6,7 @@ Semester Gasal 2026/2027
 
 ## Anggota Kelompok 14
 
-| No | Nama | NRP | Peran / Fokus Pengerjaan |
+| No | Nama | NRP |
 |:--:|:---|:---:|:---|
 | 1 | Fiorellin Ilona | 5027251082 |
 | 2 | Gede Satya Putra Aryanta | 5027251012 |
