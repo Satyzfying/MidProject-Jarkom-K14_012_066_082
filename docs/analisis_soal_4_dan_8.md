@@ -52,25 +52,25 @@ ketentuan "bukan dari router" terpenuhi secara literal.
 
 ### D. Bukti Pengujian DHCP
 
-**1. Lease pada DHCP Server DC (CCTV melalui relay):**
+**1. Lease klien CCTV (dari `ipconfig /all`; pool `CCTV-KOTA` di server DC):**
 ```text
-Server dan Storage DC 1 — pool CCTV-KOTA
+Klien CCTV — pool CCTV-KOTA
 192.112.96.100  MAC 00E0.B0AB.9413   (CCTV Kota 1)
 192.112.96.101  MAC 0005.5EB1.14A0   (CCTV Kota 2)
 192.112.96.102  MAC 0005.5EC8.A0CA   (CCTV Kota 3)
-3 lease(s)
+3 klien
 ```
 
 **2. Lease pada router (contoh R-UTARA):**
 ```text
-WIFI-UTARA     192.112.0.22 / .24 / .25
-SENSOR-LALIN   192.112.236.21 / .22 / .23
+WIFI-UTARA     192.112.0.22 / .21 / .23
+SENSOR-LALIN   192.112.236.22 / .21 / .23
 6 lease(s)
 ```
 
 **3. `ipconfig /all` pada klien (WiFi Publik Selatan 1):**
 ```text
-IPv4 Address........: 192.112.64.21
+IPv4 Address........: 192.112.64.22
 Subnet Mask.........: 255.255.224.0
 Default Gateway.....: 192.112.64.1
 DHCP Server.........: 192.112.64.1
@@ -108,6 +108,7 @@ Record `A` yang terdaftar dan terbaca tersimpan (`stored: true`):
 | `www.surabaya.go.id` | A | `192.112.241.2` |
 | `ftp.surabaya.go.id` | A | `192.112.239.3` |
 | `mail.surabaya.go.id` | A | `192.112.239.4` |
+| `surabaya.go.id` | A | `192.112.241.2` |
 
 **Bukti resolusi dari wilayah lain:**
 ```text
@@ -124,7 +125,13 @@ Address: 192.112.239.4
 
 ### C. Web Server (Server Balai Kota 1 — `192.112.241.2`)
 Halaman `index.html` diganti dengan **"Portal Smart City Surabaya"** yang memuat **nomor kelompok 14**
-dan daftar NRP anggota. HTTP aktif pada port 80.
+dan identitas anggota:
+
+- Fiorellin Ilona — `5027251082`
+- Gede Satya Putra Aryanta — `5027251012`
+- Catur Setyo Ragil — `5027251066`
+
+HTTP aktif pada port 80.
 
 **Bukti akses lintas wilayah:**
 
@@ -183,7 +190,7 @@ sekaligus membuktikan jalur DNS bekerja pada klien email.
 |:---|:---|:---:|
 | DHCP pool seluruh LAN pengguna | lease terbaca di R-PUSAT, R-UTARA, R-SELATAN, R-BARAT, R-PELABUHAN, R-TIMUR | ✅ |
 | Gateway + DNS otomatis | `ipconfig /all` klien | ✅ |
-| CCTV via DHCP server DC | 3 lease di pool `CCTV-KOTA`, R-DC tanpa pool | ✅ |
+| CCTV via DHCP server DC | 3 klien CCTV menerima lease dari pool `CCTV-KOTA` (ipconfig), R-DC tanpa pool | ✅ |
 | Tanpa bentrok IP statis | exclude `.1-.20`, server di luar pool | ✅ |
 | DNS `www`/`ftp`/`mail` dari semua wilayah | `nslookup` dari Selatan & Pelabuhan | ✅ |
 | Web Portal K14 by domain | browser dari Selatan, Utara, Pelabuhan | ✅ |
@@ -271,7 +278,7 @@ Setelah kabel terpasang, adjacency OSPF langsung terbentuk (tanpa perubahan DHCP
 ```text
 R-TIMUR# show ip ospf neighbor
 Neighbor ID     Pri   State      Dead Time   Address         Interface
-1.1.1.1           1   FULL/DR    00:00:32    192.112.241.45  GigabitEthernet0/0
+1.1.1.1           1   FULL/BDR   00:00:32    192.112.241.45  GigabitEthernet0/0
 
 R-TIMUR# show ip route
 O*E2 0.0.0.0/0 [110/1] via 192.112.241.45, ... GigabitEthernet0/0

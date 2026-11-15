@@ -1,7 +1,7 @@
 # 🌐 Analisis Teknis Soal 7: Dynamic Routing OSPF & Redundansi Link L7 (Kelompok 14)
 
 ## 1. Arsitektur Dynamic Routing OSPF Area 0
-Pada file varian kedua (`result/K14_VLSM_OSPF.pkt`), seluruh mekanisme pengalihan paket statis digantikan dengan protokol routing dinamis *link-state* **OSPFv2 (Open Shortest Path First)** dalam satu area tunggal (**Backbone Area 0**).
+Pada file varian kedua (`K14_VLSM_OSPF.pkt`), seluruh mekanisme pengalihan paket statis digantikan dengan protokol routing dinamis *link-state* **OSPFv2 (Open Shortest Path First)** dalam satu area tunggal (**Backbone Area 0**).
 
 ### A. Alokasi Router-ID Hierarkis
 Untuk mempermudah pemeliharaan, pencarian kesalahan (*troubleshooting*), dan penentuan Designated Router (DR/BDR), setiap router dikonfigurasikan dengan Router-ID eksplisit:
@@ -32,7 +32,14 @@ Sesuai rancangan VLSM Kelompok 14, alokasi link WAN point-to-point terakhir adal
 Sesuai instruksi soal: *"Router tidak mengirim pesan OSPF ke arah LAN pengguna."*
 - **Tujuan Keamanan (*Security*)**: Mencegah perangkat pengguna asing atau penyerang di jaringan LAN menyuntikkan paket OSPF palsu (*rogue OSPF neighbor*) yang dapat merusak tabel rute kota.
 - **Efisiensi Sumber Daya (*Bandwidth & CPU*)**: Menghindari transmisi paket *OSPF Hello Multicast* (`224.0.0.5`) ke segmen LAN switch yang tidak memiliki router lain, sehingga menghemat *overhead* prosesor switch dan komputer klien.
-- **Implementasi**: Perintah `passive-interface <interface-lan>` diterapkan di seluruh port LAN 1 dan LAN 2 di ke-7 router. Jaringan LAN tetap diiklankan ke dalam OSPF, namun router tidak mendengarkan atau mengirim paket Hello pada antarmuka tersebut.
+- **Implementasi**: Perintah `passive-interface` diterapkan pada seluruh interface LAN pengguna:
+  - `R-PUSAT`: `Vlan21`, `Vlan27`
+  - `R-DC`: `GigabitEthernet0/1`, `GigabitEthernet0/2`
+  - `R-UTARA`: `Vlan23`, `GigabitEthernet0/0/2`
+  - `R-BARAT`, `R-TIMUR`, `R-SELATAN`, `R-PELABUHAN`: `GigabitEthernet0/1`, `GigabitEthernet0/2`
+
+  Jaringan LAN tetap diiklankan ke dalam OSPF, namun router tidak mendengarkan atau mengirim
+  paket Hello pada antarmuka tersebut.
 
 ### B. Distribusi Default Route Internet Otomatis
 - **Instruksi Soal**: *"Default route ke internet hanya dikonfigurasi di R-PUSAT, dan router lain mendapatkannya secara otomatis melalui OSPF."*

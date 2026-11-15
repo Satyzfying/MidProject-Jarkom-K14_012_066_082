@@ -17,7 +17,7 @@ show ip ospf neighbor             ! Cek apakah tetangga OSPF statusnya 'FULL'
 ## 💥 Skenario 1: GRE Tunnel Down / Tidak Bisa Ping Balai Kota ➔ Pelabuhan
 
 ### 1. Gejala:
-Ping dari Server Balai Kota (`192.112.241.2`) ke SCADA Pelabuhan (`192.112.160.2`) gagal / Request Timed Out, atau `show interfaces tunnel 0` menunjukkan:  
+Ping dari Server Balai Kota (`192.112.241.2`) ke SCADA Pelabuhan (`192.112.160.22`, DHCP) gagal / Request Timed Out, atau `show interfaces tunnel 0` menunjukkan:  
 `Tunnel0 is up, line protocol is down`
 
 ### 2. Lokasi Pengecekan:

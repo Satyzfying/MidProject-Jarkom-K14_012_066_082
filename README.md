@@ -22,7 +22,9 @@ Semester Gasal 2026/2027
 │   ├── analisis_soal_4_dan_8.md        Analisis DHCP & layanan aplikasi
 │   ├── analisis_soal_6_tunnel.md       Analisis GRE Tunnel & IPsec
 │   ├── analisis_soal_7_ospf.md         Analisis OSPF & link cadangan L7
-│   └── cheat_sheet_uji2_orang2.md      Panduan uji 2 individu
+│   ├── cheat_sheet_uji2_orang1.md      Panduan uji 2 - static routing & NAT
+│   ├── cheat_sheet_uji2_orang2.md      Panduan uji 2 - tunnel & OSPF
+│   └── cheat_sheet_uji2_orang3.md      Panduan uji 2 - DHCP & aplikasi
 ├── images/
 │   └── soal-8/                         Screenshot topologi & detail
 ├── nodes/
@@ -32,11 +34,9 @@ Semester Gasal 2026/2027
 │   ├── dhcp_all_routers.cfg            Script DHCP 7 router + relay CCTV
 │   ├── ospf_all_routers.cfg            Script OSPF 7 router
 │   └── router_cabang_static.cfg        Script static route router cabang
-├── result/
-│   ├── K14_VLSM.pkt                    Topologi utama (static + GRE + aplikasi)
-│   ├── K14_VLSM_OSPF.pkt               Varian OSPF + link cadangan L7
-│   └── UTS-KOMDAT-JARKOM-K14.xlsx      Spreadsheet subnetting resmi
-├── K14_VLSM.pkt                        File kerja yang dibuka di Packet Tracer
+├── K14_VLSM.pkt                        Topologi utama (static + GRE + aplikasi)
+├── K14_VLSM_OSPF.pkt                   Varian OSPF + link cadangan L7
+├── UTS-KOMDAT-JARKOM-K14.xlsx          Spreadsheet subnetting resmi
 ├── .gitignore
 └── README.md
 ```
@@ -47,9 +47,9 @@ Semester Gasal 2026/2027
 
 Skema yang dipakai adalah **VLSM** dengan blok induk `192.112.0.0/16`.
 
-- Kebutuhan host seluruh kota: 61.752 alamat.
-- Kapasitas blok `/16`: 65.536 alamat, efisiensi 94,23%, sisa 3.784 alamat.
-- CIDR membutuhkan 118.784 alamat sehingga harus memakai blok `/15` dengan pemborosan di atas 50%.
+- Kebutuhan host LAN: **42.080 alamat**.
+- Alokasi VLSM di blok `/16`: **61.752 alamat** pada `K14_VLSM.pkt` (tanpa L7) dan **61.756 alamat** pada `K14_VLSM_OSPF.pkt` (dengan L7 cadangan), termasuk network/broadcast; kapasitas `/16` 65.536 alamat, efisiensi 94,23%, sisa 3.784/3.780 alamat.
+- CIDR mengalokasikan **118.784 alamat** pada blok induk `/15` berkapasitas 131.072 alamat (90,63% terpakai, sisa 12.288); hanya 42.080 alamat yang dipakai host (32,10% utilisasi), sehingga CIDR memakai sekitar 1,92x alokasi VLSM LAN dan 2,82x kebutuhan host.
 
 ### 1.1 Alokasi Subnet LAN (14 subnet)
 
@@ -138,9 +138,11 @@ diberi variasi kecil agar tata letak terlihat lebih natural.
 - Seluruh rute statis antar-router dihapus; rute statis yang tersisa hanya default ISP dan
   jalur GRE Tunnel.
 - `passive-interface` dipasang pada seluruh interface LAN sehingga tidak ada hello OSPF ke
-  segmen pengguna. Terverifikasi lewat `show ip ospf interface` ("No Hellos").
+  segmen pengguna: `Vlan21`/`Vlan27` (R-PUSAT), `Gi0/1`/`Gi0/2` (R-DC, R-BARAT, R-TIMUR,
+  R-SELATAN, R-PELABUHAN), dan `Vlan23`/`Gi0/0/2` (R-UTARA). Terverifikasi lewat
+  `show ip ospf interface` ("No Hellos").
 - Link cadangan L7 `192.112.241.60/30` antara `R-DC` dan `R-UTARA` sudah dibuat
-  (`R-DC` memakai modul HWIC-4ESW, `R-UTARA` port `Gi0/1/1`).
+  (`R-DC` dan `R-UTARA` memakai SVI `Vlan1` di atas modul HWIC-4ESW).
 - Uji failover: `R-DC Gi0/0` (L1) di-shutdown, rute ke LAN Data Center otomatis beralih
   lewat `R-UTARA` dan L7, ping ke server DC tetap berhasil; link lalu diaktifkan kembali.
 - Detail: [`docs/analisis_soal_7_ospf.md`](docs/analisis_soal_7_ospf.md) serta
@@ -169,8 +171,10 @@ Domain internal `14.smartcity.lab`, dengan alias `surabaya.go.id`.
 | Mail (SMTP/POP3) | `Server dan Storage DC 3` | `192.112.239.4` |
 | Web | `Server Balai Kota 1` | `192.112.241.2` |
 
-- DNS mencatat `www`, `ftp`, dan `mail` untuk `14.smartcity.lab` maupun `surabaya.go.id`.
-- Web menampilkan halaman "Portal Smart City Surabaya" dengan nomor kelompok 14.
+- DNS mencatat `www`, `ftp`, dan `mail` untuk `14.smartcity.lab` maupun `surabaya.go.id`,
+  ditambah record apex kedua domain.
+- Web menampilkan halaman "Portal Smart City Surabaya" dengan nomor kelompok 14 dan nama
+  ketiga anggota.
 - FTP memakai akun `cctv` / `K14cctv` dan `pegawai` / `K14pegawai` dengan hak RWDNL.
 - Mail memakai domain `14.smartcity.lab` dengan akun `balai1` - `balai3` dan
   `pelabuhan1` - `pelabuhan3`, diuji kirim dan terima dua arah.
@@ -207,7 +211,7 @@ WiFi Publik Selatan dan PJU Pintar.
 
 ## 5. Bukti Pengujian
 
-**DHCP pada klien CCTV (relay ke server DC):**
+**DHCP pada klien CCTV (CCTV Kota 1, relay ke server DC):**
 
 ```text
 IPv4 Address........: 192.112.96.100
@@ -217,13 +221,13 @@ DHCP Server.........: 192.112.239.2
 DNS Servers.........: 192.112.239.2
 ```
 
-**Lease pada server DHCP DC:**
+**Lease klien CCTV (dari `ipconfig /all`):**
 
 ```text
-Pool CCTV-KOTA
-192.112.96.100  00E0.B0AB.9413
-192.112.96.101  0005.5EB1.14A0
-192.112.96.102  0005.5EC8.A0CA
+Klien CCTV — pool CCTV-KOTA
+192.112.96.100  00E0.B0AB.9413  (CCTV Kota 1)
+192.112.96.101  0005.5EB1.14A0  (CCTV Kota 2)
+192.112.96.102  0005.5EC8.A0CA  (CCTV Kota 3)
 ```
 
 **Resolusi DNS dari wilayah lain:**
@@ -241,7 +245,9 @@ Address: 192.112.241.2
 Portal Smart City Surabaya
 Pemerintah Kota Surabaya
 Kelompok 14
-NRP: 012 - 066 - 082
+Fiorellin Ilona - 5027251082
+Gede Satya Putra Aryanta - 5027251012
+Catur Setyo Ragil - 5027251066
 ```
 
 **Login FTP dari LAN CCTV Kota:**
@@ -259,7 +265,7 @@ Listing /ftp directory from ftp.14.smartcity.lab
 
 ```text
 R-TIMUR# show ip ospf neighbor
-1.1.1.1        1   FULL/DR   00:00:32   192.112.241.45   GigabitEthernet0/0
+1.1.1.1        1   FULL/BDR  00:00:32   192.112.241.45   GigabitEthernet0/0
 
 C:\> ping 8.8.8.8
 Reply from 8.8.8.8: bytes=32 time<1ms TTL=125
