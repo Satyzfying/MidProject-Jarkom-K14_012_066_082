@@ -89,121 +89,114 @@ Skema yang dipakai adalah **VLSM** dengan blok induk `192.112.0.0/16`.
 
 ## 2. Topologi Jaringan
 
-Arsitektur hub-and-spoke dengan `R-PUSAT` sebagai core. Lima router cabang terhubung langsung
-ke `R-PUSAT`, `R-PELABUHAN` terhubung melalui `R-UTARA`, dan satu GRE Tunnel menghubungkan
-Balai Kota dengan Pelabuhan. Pada varian OSPF ditambahkan link cadangan L7 antara `R-DC` dan
-`R-UTARA`.
+Arsitektur jaringan mengusung model *hub-and-spoke* hierarkis simetris dengan `R-PUSAT` sebagai *core hub* kota.
+Tata letak topologi pada canvas Cisco Packet Tracer telah disesuaikan secara presisi mengikuti bagan resmi (**Gambar 1. Topologi Mid-Project**):
+- **Tingkat Atas**: `R-ISP` (*Internet*) berada di puncak tengah dan terhubung langsung ke Server Publik `8.8.8.8` di sebelah kanannya.
+- **Tingkat Pusat (Core)**: `R-PUSAT` (*Balai Kota*) berada tepat di bawah `R-ISP`, diapit secara horizontal oleh LAN Pegawai Balai Kota di sisi kiri dan LAN Server Balai Kota di sisi kanan.
+- **Tingkat Wilayah (5 Cabang Sejajar)**: Lima router regional disusun berjajar dalam satu garis horizontal rapi dari kiri ke kanan: `R-DC` (*Command Center*), `R-BARAT` (*Surabaya Barat*), `R-UTARA` (*Surabaya Utara*), `R-TIMUR` (*Surabaya Timur*), dan `R-SELATAN` (*Surabaya Selatan*).
+- **Tingkat Distribusi LAN Wilayah**: Masing-masing router cabang menaungi 2 kelompok LAN (switch dan end-devices) yang tersusun rapi di bawahnya.
+- **Tingkat Maritim (Pelabuhan)**: `R-PELABUHAN` diletakkan tepat vertikal di bawah `R-UTARA` terhubung via link fisik `L6` dan jalur virtual `Tunnel GRE`, membawahi LAN SCADA Pelabuhan dan Kantor Pelabuhan.
+- Pada varian OSPF (`K14_VLSM_OSPF.pkt`), ditambahkan link cadangan `L7` antara `R-DC` dan `R-UTARA`.
 
 ![Topologi Smart City Kelompok 14](images/soal-8/topologi-k14-vlsm.png)
 
-Label setiap LAN memuat nama subnet, Network ID/prefix, dan jumlah host. Posisi perangkat
-diberi variasi kecil agar tata letak terlihat lebih natural.
+Label pada canvas memuat identitas nama subnet, Network ID/prefix, kapasitas host, penanda link WAN (`L1` - `L6`), label `Tunnel GRE`, serta penanda uplink ISP `203.0.113.56/30`.
 
 ---
 
-## 3. Implementasi
+## 3. Penjelasan Teknis Solusi Per-Soal (Soal 1 s.d. Soal 8)
 
-### 3.1 Static Routing & NAT (Soal 3 dan 5)
+Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir penugasan Mid-Project:
 
-- Default route hanya dipasang di router yang mengarah ke atas: cabang ke `R-PUSAT`, dan
-  `R-PUSAT` ke `R-ISP` (`0.0.0.0/0` via `203.0.113.58`).
-- `R-PUSAT` memiliki rute ke seluruh LAN cabang dan rute khusus Pelabuhan via Tunnel0.
-- NAT overload (PAT) memakai `access-list 1` (`192.112.0.0/16` dan `192.168.14.0/30`) pada
-  `GigabitEthernet0/0/2`.
-- Seluruh interface internal ditandai `ip nat inside`: `Gi0/0/0`, `Gi0/0/1`, `Vlan21`,
-  `Vlan27`, `Vlan30`, `Vlan40`, `Vlan50`.
-- `R-ISP` tidak memiliki rute ke blok privat.
+### 3.1 Soal 1 — Skema Pengalamatan (Subnetting VLSM & Analisis CIDR)
+- **Ketentuan**: Merancang pengalamatan berbasis blok induk `192.112.0.0/16` untuk 14 subnet LAN (kebutuhan 42.080 host) dan link WAN point-to-point (`/30`).
+- **Implementasi VLSM**: Alokasi dilakukan bertingkat mulai dari kebutuhan host terbesar: WiFi Publik Utara (11.000 host, `/18`), WiFi Publik Selatan (6.500 host, `/19`), CCTV Kota (6.000 host, `/19`), hingga terkecil Server Balai Kota (20 host, `/27`), lalu dilanjutkan link point-to-point `L1` - `L6` (`/30`) dan cadangan `L7` (`/30`).
+- **Analisis Efisiensi vs CIDR**:
+  - **VLSM** mengalokasikan **61.752 alamat** pada blok `/16` (kapasitas 65.536), menghasilkan efisiensi tinggi **94,23%** dengan sisa 3.784 alamat yang dapat dialokasikan di masa depan.
+  - **CIDR** membutuhkan blok induk `/15` (131.072 alamat) dan mengalokasikan **118.784 alamat**, padahal kebutuhan riil hanya 42.080 host (utilisasi riil hanya 32,10%). CIDR memboroskan sekitar 1,92x alamat dibanding VLSM.
+- **Artefak**: Spreadsheet resmi [`UTS-KOMDAT-JARKOM-K14.xlsx`](UTS-KOMDAT-JARKOM-K14.xlsx).
 
-### 3.2 GRE Tunnel & IPsec (Soal 6)
+### 3.2 Soal 2 — Desain Topologi & Penataan Perangkat Jaringan (CPT)
+- **Ketentuan**: Membangun topologi modular skala kota di Cisco Packet Tracer dengan 8 Router, 14 Switch 2960, 36 PC host, 7 Server, dan 1 Network Controller.
+- **Implementasi**: Penataan canvas dirancang simetris dan terstruktur sesuai Gambar 1 Soal:
+  - Hubungan WAN point-to-point: `R-PUSAT` terhubung ke `R-DC` (`L1`), `R-UTARA` (`L2`), `R-SELATAN` (`L3`), `R-TIMUR` (`L4`), `R-BARAT` (`L5`), dan uplink `R-ISP`. `R-PELABUHAN` terhubung transit ke `R-UTARA` (`L6`).
+  - Seluruh perangkat switch dan klien ditata rapi di bawah router masing-masing tanpa ada kabel yang saling tumpang-tindih (*clean cabling*).
+- **Artefak**: [`K14_VLSM.pkt`](K14_VLSM.pkt) dan [`K14_VLSM_OSPF.pkt`](K14_VLSM_OSPF.pkt).
 
-- `Tunnel0`: `192.168.14.1` (R-PUSAT) dan `192.168.14.2` (R-PELABUHAN), `mtu 1476`.
-- Lalu lintas Balai Kota ke Pelabuhan diarahkan lewat tunnel dengan static route.
-- IPsec over GRE aktif: ISAKMP policy 10 (AES/SHA/DH2, PSK `K14SECURE`), transform-set
-  `esp-aes esp-sha-hmac`, ACL 100 (GRE `192.112.241.37` - `192.112.241.54`), dan crypto map
-  `CMAP` pada `R-PUSAT Gi0/0/1` serta `R-PELABUHAN Gi0/0/0`.
-- `R-PELABUHAN` diganti ke ISR4331 karena model 2911 tidak mendukung perintah crypto pada
-  Packet Tracer.
-- Terverifikasi: ISAKMP SA `ACTIVE`, IPsec SA ESP AES/SHA `ACTIVE`, counter encaps/decaps
-  bertambah, dan ping melalui tunnel tetap berhasil. PT tidak mendukung `mode transport`,
-  sehingga SA memakai tunnel mode.
-- Bonus IPsec diterapkan pada file utama `K14_VLSM.pkt`; varian `K14_VLSM_OSPF.pkt` berfokus
-  pada routing dinamis.
-- Detail: [`docs/analisis_soal_6_tunnel.md`](docs/analisis_soal_6_tunnel.md).
+### 3.3 Soal 3 — Routing Statis Antar-Wilayah & Jalur Keluar ISP
+- **Ketentuan**: Mengatur aliran paket antar-wilayah dan default route keluar kota menggunakan tabel rute statis yang efisien.
+- **Implementasi**:
+  - **Router Cabang**: Bertindak sebagai *stub network*, hanya membutuhkan satu rute default `ip route 0.0.0.0 0.0.0.0 <IP_WAN_R-PUSAT>`.
+  - **R-PUSAT**: Menyimpan rute statis spesifik ke setiap LAN cabang melalui IP next-hop masing-masing, rute default `0.0.0.0/0` via uplink ISP `203.0.113.58`, serta rute ke LAN Pelabuhan diarahkan masuk ke `Tunnel0`.
+  - **R-ISP**: Tidak memiliki rute balik ke blok privat `192.112.0.0/16` untuk menguji keabsahan mekanisme NAT.
+- **Artefak**: [`nodes/router_cabang_static.cfg`](nodes/router_cabang_static.cfg) dan [`nodes/R-PUSAT/static_nat.cfg`](nodes/R-PUSAT/static_nat.cfg).
 
-### 3.3 Dynamic Routing OSPF (Soal 7)
+### 3.4 Soal 4 — Layanan Alokasi IP Dinamis (DHCP Services & Relay Terpusat)
+- **Ketentuan**: 36 PC pengguna di 12 LAN menerima IP dinamis, gateway, dan DNS otomatis; router dan server ber-IP statis; subnet CCTV Kota dilayani DHCP server Data Center (bukan oleh router).
+- **Implementasi**:
+  - Dibuat pool DHCP di 7 router cabang/pusat dengan exclusion address `.1 - .20` guna memproteksi IP gateway dan perangkat infrastruktur statis.
+  - Setiap pool otomatis menyertakan `dns-server 192.112.239.2` (Server DNS Data Center).
+  - **DHCP Relay CCTV**: Pada antarmuka `GigabitEthernet0/1` `R-DC`, diaktifkan `ip helper-address 192.112.239.2`. Broadcast DHCP Discover dari PC CCTV diubah menjadi unicast menuju `Server dan Storage DC 1` (pool `CCTV-KOTA` rentang `192.112.96.100` - `.119.211`). `R-DC` sama sekali tidak memiliki pool lokal untuk CCTV.
+- **Artefak**: [`nodes/dhcp_all_routers.cfg`](nodes/dhcp_all_routers.cfg) dan [`docs/analisis_soal_4_dan_8.md`](docs/analisis_soal_4_dan_8.md).
 
-- Single area 0, `network 192.112.0.0 0.0.255.255 area 0` pada tujuh router.
-- Router-ID `1.1.1.1` (`R-PUSAT`) sampai `7.7.7.7` (`R-PELABUHAN`).
-- `default-information originate` hanya di `R-PUSAT`; router lain menerima default `O*E2`.
-- Seluruh rute statis antar-router dihapus; rute statis yang tersisa hanya default ISP dan
-  jalur GRE Tunnel.
-- `passive-interface` dipasang pada seluruh interface LAN sehingga tidak ada hello OSPF ke
-  segmen pengguna: `Vlan21`/`Vlan27` (R-PUSAT), `Gi0/1`/`Gi0/2` (R-DC, R-BARAT, R-TIMUR,
-  R-SELATAN, R-PELABUHAN), dan `Vlan23`/`Gi0/0/2` (R-UTARA). Terverifikasi lewat
-  `show ip ospf interface` ("No Hellos").
-- Link cadangan L7 `192.112.241.60/30` antara `R-DC` dan `R-UTARA` sudah dibuat
-  (`R-DC` dan `R-UTARA` memakai SVI `Vlan1` di atas modul HWIC-4ESW).
-- Uji failover: `R-DC Gi0/0` (L1) di-shutdown, rute ke LAN Data Center otomatis beralih
-  lewat `R-UTARA` dan L7, ping ke server DC tetap berhasil; link lalu diaktifkan kembali.
-- Detail: [`docs/analisis_soal_7_ospf.md`](docs/analisis_soal_7_ospf.md) serta
-  [`nodes/ospf_all_routers.cfg`](nodes/ospf_all_routers.cfg).
+### 3.5 Soal 5 — Akses Internet & NAT Overload / PAT
+- **Ketentuan**: Memungkinkan seluruh perangkat LAN privat mengakses server internet publik `8.8.8.8` tanpa membocorkan alamat privat ke ISP.
+- **Implementasi**:
+  - NAT Overload (PAT) diterapkan di `R-PUSAT` pada interface uplink `GigabitEthernet0/0/2` (`ip nat outside`).
+  - Seluruh interface LAN internal dan subinterface/SVI ditandai sebagai `ip nat inside`.
+  - Digunakan `access-list 1 permit 192.112.0.0 0.0.255.255` dan `permit 192.168.14.0 0.0.0.3` yang diikat dengan perintah `ip nat inside source list 1 interface GigabitEthernet0/0/2 overload`.
+  - Trafik ribuan host internal ditranslasikan menjadi IP publik tunggal `203.0.113.57` dengan port multiplexing.
+- **Artefak**: [`nodes/R-PUSAT/static_nat.cfg`](nodes/R-PUSAT/static_nat.cfg) dan [`docs/cheat_sheet_uji2_orang1.md`](docs/cheat_sheet_uji2_orang1.md).
 
-### 3.4 DHCP Services (Soal 4)
+### 3.6 Soal 6 — Jalur Privat Virtual Terenkripsi (GRE Tunnel & Keamanan IPsec)
+- **Ketentuan**: Membangun tunnel privat Balai Kota - Pelabuhan menembus `R-UTARA`, menganalisis alasan router memilih tunnel, menganalisis kelemahan GRE, dan menerapkan proteksi enkripsi IPsec.
+- **Implementasi**:
+  - **GRE Tunnel**: Konfigurasi antarmuka `Tunnel0` (`192.168.14.0/30`) pada `R-PUSAT` (`192.168.14.1`) dan `R-PELABUHAN` (`192.168.14.2`), dengan MTU 1476.
+  - **Pemilihan Jalur**: Router memilih tunnel karena rute ke LAN Pelabuhan memiliki *Longest Prefix Match* (`/19` dan `/25`) yang lebih spesifik dibanding default route (`/0`), serta memiliki *Administrative Distance* statis (AD 1) yang mengungguli rute OSPF (AD 110).
+  - **Kelemahan GRE**: GRE hanya protokol enkapsulasi (IP proto 47) tanpa enkripsi, sehingga payload teks mentah rentan disadap di router transit `R-UTARA`.
+  - **IPsec over GRE**: Diterapkan ISAKMP Policy 10 (AES-128, SHA-1, DH Group 2, PSK `K14SECURE`) dan Transform-set ESP-AES ESP-SHA. Crypto Map `CMAP` dipasang pada port fisik WAN `R-PUSAT` (`Gi0/0/1`) dan `R-PELABUHAN` (`Gi0/0/0`). Status SA terverifikasi `ACTIVE` dengan pertambahan counter enkapsulasi/dekapsulasi.
+- **Artefak**: [`docs/analisis_soal_6_tunnel.md`](docs/analisis_soal_6_tunnel.md), [`nodes/R-PUSAT/gre_tunnel.cfg`](nodes/R-PUSAT/gre_tunnel.cfg), dan [`nodes/R-PELABUHAN/gre_tunnel.cfg`](nodes/R-PELABUHAN/gre_tunnel.cfg).
 
-- Router dan seluruh server memakai IP statis.
-- 36 PC pengguna di 12 LAN memakai DHCP dan menerima IP, gateway, serta DNS
-  `192.112.239.2` secara otomatis.
-- Pool per LAN pada masing-masing router; blok `.1` - `.20` di-exclude agar tidak bentrok
-  dengan gateway dan perangkat statis.
-- Subnet CCTV Kota dilayani DHCP server di LAN Server & Storage DC, bukan oleh router.
-  R-DC hanya menjadi relay (`ip helper-address 192.112.239.2`), dengan pool `CCTV-KOTA`
-  pada rentang `192.112.96.100` - `192.112.119.211`.
-- Script: [`nodes/dhcp_all_routers.cfg`](nodes/dhcp_all_routers.cfg).
+### 3.7 Soal 7 — Dynamic Routing OSPF Area 0 & Redundansi Link L7 (Failover)
+- **Ketentuan**: Pada file varian `K14_VLSM_OSPF.pkt`, mengganti seluruh static routing antar-router dengan OSPFv2 Single Area 0, Router-ID terstruktur, tanpa pesan OSPF ke arah LAN pengguna, serta uji ketahanan link cadangan L7 (`R-DC` <--> `R-UTARA`).
+- **Implementasi**:
+  - Protokol OSPF aktif pada ketujuh router kota dalam **Backbone Area 0** (`network 192.112.0.0 0.0.255.255 area 0`).
+  - **Router-ID**: Dikonfigurasi eksplisit `1.1.1.1` (`R-PUSAT`) hingga `7.7.7.7` (`R-PELABUHAN`).
+  - **Default Route Injection**: Perintah `default-information originate` dipasang di `R-PUSAT`, menyebarkan rute default `O*E2` secara otomatis ke seluruh cabang.
+  - **Keamanan LAN**: `passive-interface` dipasang di seluruh antarmuka LAN pengguna (`Vlan21`/`Vlan27` di R-PUSAT, `Vlan23`/`Gi0/0/2` di R-UTARA, `Gi0/1`/`Gi0/2` di cabang lain) untuk mencegah *rogue neighbor* dan menghemat CPU/bandwidth.
+  - **Link Cadangan L7 & Uji Failover**: Subnet WAN `/30` dialokasikan pada `192.112.241.60/30` di atas SVI Vlan1 HWIC-4ESW. Saat link utama `L1` diputus (*shutdown*), OSPF langsung mengalihkan rute Data Center melalui `R-UTARA` dan `L7` dalam hitungan detik (*zero packet loss* setelah konvergensi).
+- **Artefak**: [`docs/analisis_soal_7_ospf.md`](docs/analisis_soal_7_ospf.md) dan [`nodes/ospf_all_routers.cfg`](nodes/ospf_all_routers.cfg).
 
-### 3.5 Layanan Aplikasi (Soal 8)
-
-Domain internal `14.smartcity.lab`, dengan alias `surabaya.go.id`.
-
-| Layanan | Server | Alamat |
-|:---|:---|:---|
-| DNS dan DHCP | `Server dan Storage DC 1` | `192.112.239.2` |
-| FTP | `Server dan Storage DC 2` | `192.112.239.3` |
-| Mail (SMTP/POP3) | `Server dan Storage DC 3` | `192.112.239.4` |
-| Web | `Server Balai Kota 1` | `192.112.241.2` |
-
-- DNS mencatat `www`, `ftp`, dan `mail` untuk `14.smartcity.lab` maupun `surabaya.go.id`,
-  ditambah record apex kedua domain.
-- Web menampilkan halaman "Portal Smart City Surabaya" dengan nomor kelompok 14 dan nama
-  ketiga anggota.
-- FTP memakai akun `cctv` / `K14cctv` dan `pegawai` / `K14pegawai` dengan hak RWDNL.
-- Mail memakai domain `14.smartcity.lab` dengan akun `balai1` - `balai3` dan
-  `pelabuhan1` - `pelabuhan3`, diuji kirim dan terima dua arah.
-- Detail: [`docs/analisis_soal_4_dan_8.md`](docs/analisis_soal_4_dan_8.md).
+### 3.8 Soal 8 — Layanan Aplikasi Smart City Terpusat
+- **Ketentuan**: Mengimplementasikan 4 layanan aplikasi inti (DNS, Web, FTP, Mail) pada domain internal `14.smartcity.lab` dan alias `surabaya.go.id`.
+- **Implementasi**:
+  1. **DNS Server** (`Server dan Storage DC 1` - `192.112.239.2`): Menyediakan *Forward Lookup Zone* untuk `14.smartcity.lab` dan `surabaya.go.id` (A record untuk apex, `www`, `ftp`, dan `mail`).
+  2. **Web Server** (`Server Balai Kota 1` - `192.112.241.2`): Menampilkan portal resmi "Portal Smart City Surabaya" lengkap dengan identitas kelompok 14.
+  3. **FTP Server** (`Server dan Storage DC 2` - `192.112.239.3`): Menampung backup CCTV (`user: cctv / pass: K14cctv`) dan berkas staf (`user: pegawai / pass: K14pegawai`) dengan hak akses penuh RWDNL.
+  4. **Mail Server** (`Server dan Storage DC 3` - `192.112.239.4`): Melayani SMTP dan POP3 domain `14.smartcity.lab` untuk akun staf Balai Kota (`balai1` - `balai3`) dan Pelabuhan (`pelabuhan1` - `pelabuhan3`), teruji berkirim email dua arah.
+- **Artefak**: [`docs/analisis_soal_4_dan_8.md`](docs/analisis_soal_4_dan_8.md) dan [`docs/cheat_sheet_uji2_orang3.md`](docs/cheat_sheet_uji2_orang3.md).
 
 ---
 
 ## 4. Dokumentasi Visual
 
-Screenshot diambil langsung dari canvas Packet Tracer.
+Screenshot dokumentasi diambil langsung dari canvas Cisco Packet Tracer dengan penataan tata letak simetris terbaru.
 
 ### 4.1 Wilayah Barat dan Data Center
 
-Menampilkan `R-DC` dan `R-BARAT` beserta LAN CCTV Kota, Server & Storage DC, WiFi Publik
-Barat, dan Puskesmas & Sekolah Barat.
+Menampilkan router `R-DC` (*Command Center*) dan `R-BARAT` (*Surabaya Barat*) beserta 4 LAN pengguna: CCTV Kota, Server & Storage DC, WiFi Publik Barat, dan Puskesmas & Sekolah Barat.
 
 ![Detail wilayah barat dan Data Center](images/soal-8/topologi-detail-barat-dc.png)
 
 ### 4.2 Balai Kota, Utara, dan Pelabuhan
 
-Menampilkan `R-PUSAT`, LAN Pegawai dan Server Balai Kota, `R-UTARA` dengan sensor lalu
-lintas, serta `R-PELABUHAN` dengan SCADA dan Kantor Pelabuhan.
+Menampilkan tulang punggung utama kota: `R-ISP`, `R-PUSAT` (*Balai Kota*) beserta LAN Pegawai dan Server Balai Kota, `R-UTARA` (*Surabaya Utara*) dengan sensor lalu lintas dan WiFi utara, serta `R-PELABUHAN` dengan SCADA dan Kantor Pelabuhan yang terhubung melalui GRE Tunnel.
 
 ![Detail Balai Kota, Utara, dan Pelabuhan](images/soal-8/topologi-detail-pusat-pelabuhan.png)
 
 ### 4.3 Timur dan Selatan
 
-Menampilkan `R-TIMUR` dengan WiFi Publik Timur dan Sensor Banjir, serta `R-SELATAN` dengan
-WiFi Publik Selatan dan PJU Pintar.
+Menampilkan router `R-TIMUR` (*Surabaya Timur*) dengan WiFi Publik Timur dan Sensor Banjir, serta `R-SELATAN` (*Surabaya Selatan*) dengan WiFi Publik Selatan dan PJU Pintar.
 
 ![Detail wilayah Timur dan Selatan](images/soal-8/topologi-detail-timur-selatan.png)
 
