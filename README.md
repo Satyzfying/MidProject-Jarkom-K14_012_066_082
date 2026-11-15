@@ -120,6 +120,9 @@ Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir
   - Seluruh perangkat switch dan klien ditata rapi di bawah router masing-masing tanpa ada kabel yang saling tumpang-tindih (*clean cabling*).
 - **Artefak**: [`K14_VLSM.pkt`](K14_VLSM.pkt) dan [`K14_VLSM_OSPF.pkt`](K14_VLSM_OSPF.pkt).
 
+  <img width="1887" height="775" alt="image" src="https://github.com/user-attachments/assets/dbb23920-d344-497b-9216-27d3c6a97c99" />
+
+
 ### 3.3 Soal 3 — Routing Statis Antar-Wilayah & Jalur Keluar ISP
 - **Ketentuan**: Mengatur aliran paket antar-wilayah dan default route keluar kota menggunakan tabel rute statis yang efisien.
 - **Implementasi**:
@@ -127,6 +130,12 @@ Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir
   - **R-PUSAT**: Menyimpan rute statis spesifik ke setiap LAN cabang melalui IP next-hop masing-masing, rute default `0.0.0.0/0` via uplink ISP `203.0.113.58`, serta rute ke LAN Pelabuhan diarahkan masuk ke `Tunnel0`.
   - **R-ISP**: Tidak memiliki rute balik ke blok privat `192.112.0.0/16` untuk menguji keabsahan mekanisme NAT.
 - **Artefak**: [`nodes/router_cabang_static.cfg`](nodes/router_cabang_static.cfg) dan [`nodes/R-PUSAT/static_nat.cfg`](nodes/R-PUSAT/static_nat.cfg).
+
+  <img width="862" height="868" alt="image" src="https://github.com/user-attachments/assets/882524b1-506b-43d0-bf2a-d469d304f963" />
+
+  <img width="882" height="876" alt="image" src="https://github.com/user-attachments/assets/c0ca7f6e-bccb-4fe3-9ba1-3c0f1a6c0f71" />
+
+
 
 ### 3.4 Soal 4 — Layanan Alokasi IP Dinamis (DHCP Services & Relay Terpusat)
 - **Ketentuan**: 36 PC pengguna di 12 LAN menerima IP dinamis, gateway, dan DNS otomatis; router dan server ber-IP statis; subnet CCTV Kota dilayani DHCP server Data Center (bukan oleh router).
@@ -144,6 +153,9 @@ Berikut ringkasan implementasi teknis dan pemenuhan kriteria untuk seluruh butir
   - Digunakan `access-list 1 permit 192.112.0.0 0.0.255.255` dan `permit 192.168.14.0 0.0.0.3` yang diikat dengan perintah `ip nat inside source list 1 interface GigabitEthernet0/0/2 overload`.
   - Trafik ribuan host internal ditranslasikan menjadi IP publik tunggal `203.0.113.57` dengan port multiplexing.
 - **Artefak**: [`nodes/R-PUSAT/static_nat.cfg`](nodes/R-PUSAT/static_nat.cfg).
+
+  <img width="842" height="850" alt="image" src="https://github.com/user-attachments/assets/f3fdfe15-9826-4907-b1a8-d783a89e7fcd" />
+
 
 ### 3.6 Soal 6 — Jalur Privat Virtual Terenkripsi (GRE Tunnel & Keamanan IPsec)
 - **Ketentuan**: Membangun tunnel privat Balai Kota - Pelabuhan menembus `R-UTARA`, menganalisis alasan router memilih tunnel, menganalisis kelemahan GRE, dan menerapkan proteksi enkripsi IPsec.
