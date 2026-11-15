@@ -265,27 +265,3 @@ C:\> ping 8.8.8.8
 Reply from 8.8.8.8: bytes=32 time<1ms TTL=125
 ```
 
----
-
-## 6. Berkas Pengumpulan & Video Demo
-
-- **Video Demo (YouTube Unlisted)**: [Tautan Video Demo Pengujian Soal 1-8](https://youtu.be/PENDING_LINK) *(Segera cantumkan tautan setelah diunggah)*
-- **File Packet Tracer**:
-  - Topologi Utama Static (Soal 1-6 & 8): [`K14_VLSM.pkt`](K14_VLSM.pkt) (dan di [`result/K14_VLSM.pkt`](result/K14_VLSM.pkt))
-  - Topologi Dynamic OSPF (Soal 7): [`K14_VLSM_OSPF.pkt`](K14_VLSM_OSPF.pkt) (dan di [`result/K14_VLSM_OSPF.pkt`](result/K14_VLSM_OSPF.pkt))
-- **Spreadsheet Subnetting**: [`UTS-KOMDAT-JARKOM-K14.xlsx`](UTS-KOMDAT-JARKOM-K14.xlsx) (dan di [`result/UTS-KOMDAT-JARKOM-K14.xlsx`](result/UTS-KOMDAT-JARKOM-K14.xlsx))
-- **Script Konfigurasi**: folder [`nodes/`](nodes/)
-- **Panduan Uji Individu**: [`docs/cheat_sheet_uji2_orang2.md`](docs/cheat_sheet_uji2_orang2.md)
-- **Arsip Final Penyerahan**: `ProjectJarkom_K14_012_066_082.ZIP`
-
-Catatan teknis:
-
-- Packet Tracer tidak selalu menyimpan lease DHCP saat file dibuka ulang. Jika ada PC yang
-  masih menampilkan `0.0.0.0`, jalankan `ipconfig /renew` pada PC tersebut; seluruh pool dan
-  relay sudah dikonfigurasi dan terbukti bekerja.
-- Simulator Packet Tracer tidak menyediakan berkas lokal pada PC-PT, sehingga perintah
-  `put` FTP tidak dapat dijalankan dari PC. Autentikasi, hak tulis, dan direktori server
-  sudah terbukti; untuk demo unggah, berkas dibuat lebih dulu lewat aplikasi Text Editor
-  pada PC di GUI Packet Tracer.
-- Isi mailbox tidak diekspos melalui API, sehingga bukti email berupa status pengiriman
-  dan permintaan POP3 yang berhasil.
